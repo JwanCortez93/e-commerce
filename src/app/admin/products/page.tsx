@@ -77,7 +77,7 @@ async function ProductsTable() {
               ) : (
                 <>
                   <span className="sr-only">Unavailable</span>
-                  <XCircle />
+                  <XCircle className="stroke-destructive" />
                 </>
               )}
             </TableCell>
@@ -96,23 +96,15 @@ async function ProductsTable() {
                       Download
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href={`/admin/products/${product.id}/edit`}>
-                      Edit
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href={`/admin/products/${product.id}/edit`}>
-                      Edit
-                    </Link>
-                  </DropdownMenuItem>
+                  <Link href={`/admin/products/${product.id}/edit`}>
+                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                  </Link>
                   <ActiveToggleDropdownItem
                     id={product.id}
                     isAvailableForPurchase={product.isAvailableForPurchase}
                   />
                   <DropdownMenuSeparator />
                   <DeleteDropdownItem
-                    
                     id={product.id}
                     disabled={product._count.orders > 0}
                   />
