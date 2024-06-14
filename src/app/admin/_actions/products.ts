@@ -3,7 +3,7 @@
 import db from "@/db/db";
 import { z } from "zod";
 import fs from "fs/promises";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 const fileSchema = z.instanceof(File, { message: "Required" });
 const imageSchema = fileSchema.refine(
@@ -47,4 +47,21 @@ export const addProduct = async (prevStatus: unknown, formData: FormData) => {
     },
   });
   redirect("/admin/products");
+};
+
+export const toggleProductAvailability = async (
+  id: string,
+  isAvailableForPurchase: boolean
+) => {
+  const product = await db.product.update({
+    where: { id },
+    data: { isAvailableForPurchase },
+  });
+  return product;
+};
+
+export const deleteProduct = async (id: string) => {
+  const product = await db.product.delete({ where: { id } });
+  if (product == null) return notFound();
+  return product;
 };
