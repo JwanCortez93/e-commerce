@@ -32,7 +32,7 @@ export function ProductCard({
         <p className="line-clamp-4">{description}</p>
       </CardContent>
       <CardFooter>
-        <Button asChild>
+        <Button asChild size="lg" className="w-full">
           <Link href={`/products/${id}/purchase`}>Purchase</Link>
         </Button>
       </CardFooter>
