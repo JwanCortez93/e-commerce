@@ -61,7 +61,9 @@ const OrdersTable = async () => {
           <TableRow>
             <TableCell>{order.product.name}</TableCell>
             <TableCell>{order.user.email}</TableCell>
-            <TableCell>{formatCurrency(order.pricePaidInCents)}</TableCell>
+            <TableCell>
+              {formatCurrency(order.pricePaidInCents / 100)}
+            </TableCell>
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger>
