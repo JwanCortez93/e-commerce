@@ -60,7 +60,7 @@ const OrdersTable = async () => {
       </TableHeader>
       <TableBody>
         {orders.map((order) => (
-          <TableRow>
+          <TableRow key={order.id}>
             <TableCell>{order.product.name}</TableCell>
             <TableCell>{order.user.email}</TableCell>
             <TableCell>
