@@ -1,7 +1,7 @@
 "use server";
 
 import db from "@/db/db";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { z } from "zod";
 
@@ -67,6 +67,19 @@ export const addDiscountCode = async (
     },
   });
   redirect("/admin/discount-codes");
+};
 
-  return {};
+export const toggleDiscountCodeActive = async (
+  id: string,
+  isActive: boolean
+) => {
+  await db.discountCode.update({ where: { id }, data: { isActive } });
+};
+
+export const deleteDiscountCode = async (id: string) => {
+  const discountCode = await db.discountCode.delete({ where: { id } });
+  if (discountCode == null) {
+    return notFound();
+  }
+  return discountCode;
 };

@@ -16,6 +16,8 @@ export default function DiscountCodeForm({
 }) {
   const [error, action] = useFormState(addDiscountCode, {});
   const [isForAllProducts, setIsForAllProducts] = useState(true);
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
 
   return (
     <form action={action} className="space-y-8">
@@ -69,7 +71,7 @@ export default function DiscountCodeForm({
           id="expiresAt"
           name="expiresAt"
           className="w-max"
-          min={new Date().toJSON().split(":").slice(0, -1).join(":")}
+          min={today.toJSON().split(":").slice(0, -1).join(":")}
         />
         <div className="text-muted-foreground">
           Leave blank for no expiration
