@@ -9,7 +9,10 @@ const addSchema = z
   .object({
     code: z.string().min(1),
     discountAmount: z.coerce.number().int().min(1),
-    isFixed: z.coerce.boolean(),
+    isFixed: z.preprocess(
+      (value) => (value === "true" ? true : value === "false" ? false : value),
+      z.boolean()
+    ),
     isForAllProducts: z.coerce.boolean(),
     productsIds: z.array(z.string()).optional(),
     expiresAt: z.preprocess(
@@ -39,7 +42,6 @@ export const addDiscountCode = async (
   formData: FormData
 ) => {
   const productIds = formData.getAll("productsIds");
-  console.log(formData);
 
   const result = addSchema.safeParse({
     ...Object.fromEntries(formData.entries()),
