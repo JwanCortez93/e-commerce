@@ -10,7 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/formatters";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getDiscountedAmount } from "@/lib/discountCodeHelpers";
+import { formatCurrency, formatDiscountCode } from "@/lib/formatters";
 import { Product } from "@prisma/client";
 import {
   Elements,
@@ -22,11 +25,13 @@ import {
 import { loadStripe } from "@stripe/stripe-js";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useRef, useState } from "react";
 
 type CheckoutFormProps = {
   product: Product;
   clientSecret: string;
+  discountCode?: { id: string; discountAmount: number; isFixed: boolean };
 };
 
 const stripePromise = loadStripe(
@@ -36,7 +41,14 @@ const stripePromise = loadStripe(
 export default function CheckoutForm({
   product,
   clientSecret,
+  discountCode,
 }: CheckoutFormProps) {
+  const amount =
+    discountCode == null
+      ? product.priceInCents
+      : getDiscountedAmount(discountCode, product.priceInCents);
+  const isDiscounted = amount !== product.priceInCents;
+
   return (
     <div className="max-w-5xl w-full mx-auto space-y-8">
       <div className="flex gap-4 items-center">
@@ -49,8 +61,15 @@ export default function CheckoutForm({
           />
         </div>
         <div>
-          <div className="text-lg">
-            {formatCurrency(product.priceInCents / 100)}
+          <div className="text-lg flex gap-4 items-baseline">
+            <div
+              className={
+                isDiscounted ? "line-through text-muted-foreground text-sm" : ""
+              }
+            >
+              {formatCurrency(product.priceInCents / 100)}
+            </div>
+            {isDiscounted && <div>{formatCurrency(amount / 100)}</div>}
           </div>
           <h1 className="text-2xl font-bold">{product.name}</h1>
           <div className="line-clamp-3 text-muted-foreground">
@@ -58,8 +77,15 @@ export default function CheckoutForm({
           </div>
         </div>
       </div>
-      <Elements options={{ clientSecret }} stripe={stripePromise}>
-        <Form priceInCents={product.priceInCents} productId={product.id} />
+      <Elements
+        options={{ amount, mode: "payment", currency: "usd" }}
+        stripe={stripePromise}
+      >
+        <Form
+          discountCode={discountCode}
+          priceInCents={amount}
+          productId={product.id}
+        />
       </Elements>
     </div>
   );
@@ -68,15 +94,22 @@ export default function CheckoutForm({
 const Form = ({
   priceInCents,
   productId,
+  discountCode,
 }: {
   priceInCents: number;
   productId: string;
+  discountCode?: { id: string; discountAmount: number; isFixed: boolean };
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [email, setEmail] = useState<string>();
+  const discountCodeRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const coupon = searchParams.get("coupon") || "";
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -115,11 +148,12 @@ const Form = ({
       <Card>
         <CardHeader>
           <CardTitle>Checkout</CardTitle>
-          {errorMessage && (
-            <CardDescription className="text-destructive">
-              {errorMessage}
-            </CardDescription>
-          )}
+          <CardDescription className="text-destructive">
+            {errorMessage && <div>{errorMessage}</div>}
+            {coupon != null && discountCode == null && (
+              <div>Invalid discount code</div>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <PaymentElement />
@@ -129,6 +163,34 @@ const Form = ({
                 setEmail(e.value.email);
               }}
             />
+          </div>
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="discountCode">Coupon</Label>
+            <div className="flex gap-4 items-center">
+              <Input
+                id="discountCode"
+                type="text"
+                name="discountCode"
+                className="max-w-xs w-full"
+                defaultValue={coupon}
+                ref={discountCodeRef}
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set("coupon", discountCodeRef.current?.value || "");
+                  router.push(`${pathname}?${params.toString()}`);
+                }}
+              >
+                Apply
+              </Button>
+              {discountCode != null && (
+                <div className="text-muted-foreground">
+                  {formatDiscountCode(discountCode)} discount
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
         <CardFooter>
