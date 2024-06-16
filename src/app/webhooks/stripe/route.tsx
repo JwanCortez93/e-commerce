@@ -18,7 +18,8 @@ export const POST = async (req: NextRequest) => {
 
   if (event.type === "charge.succeeded") {
     const charge = event.data.object;
-    const { productId } = charge.metadata;
+    const { productId, discountCodeId } = charge.metadata;
+
     const { email } = charge.billing_details;
     const { amount } = charge;
 
@@ -30,7 +31,9 @@ export const POST = async (req: NextRequest) => {
 
     const userFields = {
       email,
-      orders: { create: { productId, pricePaidInCents: amount } },
+      orders: {
+        create: { productId, pricePaidInCents: amount, discountCodeId },
+      },
     };
 
     const {
@@ -48,6 +51,13 @@ export const POST = async (req: NextRequest) => {
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
+
+    if (discountCodeId != null) {
+      db.discountCode.update({
+        where: { id: discountCodeId },
+        data: { uses: { increment: 1 } },
+      });
+    }
 
     await resend.emails.send({
       from: `Support <${process.env.SENDER_EMAIL}>`,

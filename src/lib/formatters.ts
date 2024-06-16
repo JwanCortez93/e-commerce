@@ -23,6 +23,8 @@ export const formatDiscountCode = ({
   discountAmount: number;
   isFixed: boolean;
 }) => {
+  
+
   if (isFixed) {
     return formatCurrency(discountAmount);
   }

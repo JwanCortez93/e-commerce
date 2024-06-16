@@ -34,16 +34,16 @@ model User {
 }
 
 model Order {
-  id               String       @id @default(uuid())
+  id               String        @id @default(uuid())
   pricePaidInCents Int
   userId           String
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product          Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product          Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
   productId        String
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  discountCodeId   String
-  discountCode     DiscountCode @relation(fields: [discountCodeId], references: [id], onDelete: Restrict)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  discountCodeId   String?
+  discountCode     DiscountCode? @relation(fields: [discountCodeId], references: [id], onDelete: Restrict)
 }
 
 model DownloadVerification {

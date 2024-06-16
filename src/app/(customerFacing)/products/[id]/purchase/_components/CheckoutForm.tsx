@@ -1,6 +1,7 @@
 "use client";
 
-import { doesUserOrderExists } from "@/app/actions/orders";
+import { createPaymentIntent } from "@/actions/orders";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,7 +31,7 @@ import { FormEvent, useRef, useState } from "react";
 
 type CheckoutFormProps = {
   product: Product;
-  clientSecret: string;
+
   discountCode?: { id: string; discountAmount: number; isFixed: boolean };
 };
 
@@ -40,7 +41,7 @@ const stripePromise = loadStripe(
 
 export default function CheckoutForm({
   product,
-  clientSecret,
+
   discountCode,
 }: CheckoutFormProps) {
   const amount =
@@ -116,12 +117,21 @@ const Form = ({
     if (stripe == null || elements == null || email == null) return;
     setIsLoading(true);
 
-    const orderExists = await doesUserOrderExists(email, productId);
+    const formSubmit = await elements.submit();
+    if (formSubmit.error != null) {
+      setErrorMessage(formSubmit.error.message);
+      setIsLoading(false);
+      return;
+    }
 
-    if (orderExists) {
-      setErrorMessage(
-        "You've already purchased this product. Try downloading it from the My Orders page"
-      );
+    const paymentIntent = await createPaymentIntent(
+      email,
+      productId,
+      discountCode?.id
+    );
+
+    if (paymentIntent.error != null) {
+      setErrorMessage(paymentIntent.error);
       setIsLoading(false);
       return;
     }
@@ -129,6 +139,7 @@ const Form = ({
     stripe
       .confirmPayment({
         elements,
+        clientSecret: paymentIntent.clientSecret,
         confirmParams: {
           return_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/stripe/success`,
         },
@@ -179,12 +190,15 @@ const Form = ({
                 type="button"
                 onClick={() => {
                   const params = new URLSearchParams(searchParams);
+                  
+
                   params.set("coupon", discountCodeRef.current?.value || "");
                   router.push(`${pathname}?${params.toString()}`);
                 }}
               >
                 Apply
               </Button>
+
               {discountCode != null && (
                 <div className="text-muted-foreground">
                   {formatDiscountCode(discountCode)} discount
