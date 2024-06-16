@@ -15,7 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { Minus, MoreVertical } from "lucide-react";
 import DeleteDropdownItem from "./_components/OrderActions";
 
 const getOrders = () => {
@@ -25,6 +25,7 @@ const getOrders = () => {
       pricePaidInCents: true,
       product: { select: { name: true } },
       user: { select: { email: true } },
+      discountCode: { select: { code: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -51,6 +52,7 @@ const OrdersTable = async () => {
           <TableHead>Product</TableHead>
           <TableHead>Customer</TableHead>
           <TableHead>Price paid</TableHead>
+          <TableHead>Coupon</TableHead>
           <TableHead className="w-0">
             <span className="sr-only">Actions</span>
           </TableHead>
@@ -63,6 +65,9 @@ const OrdersTable = async () => {
             <TableCell>{order.user.email}</TableCell>
             <TableCell>
               {formatCurrency(order.pricePaidInCents / 100)}
+            </TableCell>
+            <TableCell>
+              {order.discountCode == null ? <Minus /> : order.discountCode.code}
             </TableCell>
             <TableCell>
               <DropdownMenu>
